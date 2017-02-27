@@ -18,7 +18,7 @@ MIME_TYPE_JSON = 'application/json'
 CONTENT_TYPE = 'Content-type'
 
 canvas_token = ""
-canvas_url = "https://umich.instructure.com"
+canvas_url = "https://umich.test.instructure.com"
 
 def get_admins():
     """
@@ -30,14 +30,17 @@ def get_admins():
     :return: response
     :rtype: requests
     """
-    url = canvas_url + '/api/v1/accounts/1/admins?per_page=100'
+    url = canvas_url + '/api/v1/accounts/1/admins?per_page=200'
     try:
         response = make_api_call(url, HTTP_METHOD_GET)
-        admins = json.loads(response.content.decode('utf-8'))
+        admins = json.loads(response.content.decode('utf-8'))   
         count = 0
-        print ('-----------Account Admins-----------------')
-        for admin in admins:
-            print(admin['user']['name']+ "\t" + admin['role'] + "\t" + admin['user']['login_id'] + "@umich.edu")
+        print "[{\"name\":\"admin\",\"id\": 1,\"users\":["
+        for i, admin in enumerate(admins):
+            print("{\"name\":\"" + admin['user']['name']+ "\",\"role\":\"" + admin['role'] + "\",\"id\":\"" + admin['user']['login_id'] + "\"}")
+            if i < len(admins)-1:
+                    print ","
+        print "]},"        
     except:
         raise
 
@@ -61,20 +64,26 @@ def get_subaccount_admin(account_id, level):
         response = make_api_call(url, HTTP_METHOD_GET)
         subaccounts = json.loads(response.content.decode('utf-8'))
         count = 0
-        for subaccount in subaccounts:
+        for i, subaccount in enumerate(subaccounts):
             count +=1
 
-            print ('----------------------------')
             """
             print(json.dumps(subaccount, indent=4, sort_keys=True))
             """
-            print(indentation + 'subaccount name:\t' + subaccount['name'] + ' \taccount id:\t'  + str(subaccount['id']))
+            print(indentation + "{\"name\":\"" + subaccount['name'] + "\",\"id\":"  + str(subaccount['id']) + ",\"users\":[")
             url = canvas_url + '/api/v1/accounts/' + str(subaccount['id']) + '/admins?per_page=100'
             try:
                 admin_response = make_api_call(url, HTTP_METHOD_GET)
                 subaccount_admins = json.loads(admin_response.content.decode('utf-8'))
-                for subaccount_admin in subaccount_admins:
-                    print(indentation + subaccount_admin['user']['name']+ "\t" + subaccount_admin['role'] + "\t" + subaccount_admin['user']['sis_login_id'] + "@umich.edu")
+                for i, subaccount_admin in enumerate(subaccount_admins):
+                    print(indentation + "{\"name\":\"" + subaccount_admin['user']['name']+ "\", \"role\":\"" + subaccount_admin['role'] + "\",\"id\":\""  + subaccount_admin['user']['sis_login_id'] + "\"}")
+                    if i < len(subaccount_admins)-1:
+                            print ","
+                print(']}')
+                if i < len(subaccounts)-1:
+                        print ","
+                if i == len(subaccounts)-1:
+                        print "]"
             except:
                 continue
 
